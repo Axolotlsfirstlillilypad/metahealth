@@ -1,0 +1,52 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+
+#tap into google by trying to search for the key word.
+def search_google_scholar(query):
+    url = 'https://scholar.google.com/scholar'
+    params = {'q': query}
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        return response.text
+    else:
+        print('Error:', response.status_code)
+        return None
+
+#filter our catch to ensure only healthcare studies are taken in. Beatifulsoup can help us parse the html code to check for compliance.
+def parse_search_results(html):
+    if html is not None:
+        soup = BeautifulSoup(html, 'html.parser')
+        results = []
+        for result in soup.find_all('div', class_='gs_r gs_or gs_scl'):
+            title = result.find('h3', class_='gs_rt').text.strip()
+            authors = result.find('div', class_='gs_a').text.strip()
+            link = result.find('a')['href']
+            results.append({'title': title, 'authors': authors, 'link': link})
+        return results
+    else:
+        return []
+
+def scrape_google_scholar(query):
+    html = search_google_scholar(query)
+    search_results = parse_search_results(html)
+    return search_results
+
+#save to csv.
+def save_results_to_csv(results, filename):
+    df = pd.DataFrame(results)
+    df.to_csv(filename, index=False)
+    print(f"Results saved to {filename}")
+
+def main():
+    query = input("Enter your search query: ")
+    results = scrape_google_scholar(query)
+    if results:
+        filename = input("Enter filename to save results (e.g., 'results.csv'): ")
+        save_results_to_csv(results, filename)
+    else:
+        print("No results found.")
+
+if __name__ == "__main__":
+    main()
