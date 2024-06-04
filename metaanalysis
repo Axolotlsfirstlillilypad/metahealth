@@ -1,0 +1,35 @@
+import pandas as pd
+from rpy2.robjects import r, pandas2ri
+from rpy2.robjects.packages import importr
+
+# Convert Python pandas DataFrame to R dataframe
+pandas2ri.activate()
+
+# Load the meta package in R
+meta = importr('meta')
+
+# Load your dataset (assuming it's in CSV format)
+data = pd.read_csv('your_dataset.csv')
+
+# Assuming your dataset has columns: 'Study', 'Effect Size', 'Standard Error'
+# You may need to preprocess your data or calculate effect sizes if necessary
+
+# Convert pandas DataFrame to R dataframe
+r_data = pandas2ri.py2rpy(data)
+
+# Perform meta-analysis using the meta package in R
+meta_result = meta.metacont(
+    es=r_data['Effect Size'],
+    se=r_data['Standard Error'],
+    studlab=r_data['Study'],
+    data=r_data
+)
+
+# Convert meta-analysis result to Python pandas DataFrame
+result_df = pandas2ri.ri2py(meta_result)
+
+# Print the meta-analysis result
+print(result_df)
+
+# You can further customize the result presentation and export it to statistical tables
+# For more advanced analysis and customization, consult the meta package documentation and additional R resources
